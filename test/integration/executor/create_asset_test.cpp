@@ -19,7 +19,6 @@ using shared_model::interface::permissions::Grantable;
 using shared_model::interface::permissions::Role;
 
 static const AssetNameType kAssetName{"new_asset"};
-static const 
 constexpr PrecisionType kAssetPrecision(1);
 
 const AssetIdType &getNewId() {
