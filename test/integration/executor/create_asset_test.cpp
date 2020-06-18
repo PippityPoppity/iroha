@@ -29,6 +29,13 @@ const AssetIdType &getNewId() {
 class CreateAssetTest : public ExecutorTestBase {
  public:
 
+void checkAsset(
+      const boost::optional<AssetIdType> &asset_id = boost::none,
+      PrecisionType precision = kAssetPrecision) {
+    auto asset_id_val = asset_id.value_or(getNewId());
+    ASSERT_NO_FATAL_FAILURE(checkSignatories(asset_id_val, {precision}););
+  }
+
   void checkNoSuchAsset(
       const boost::optional<AssetIdType> &kAsset_id = boost::none) {
     auto asset_id_val = asset_id.value_or(getNewId());
@@ -103,4 +110,12 @@ TEST_P(CreateAssetPermissionTest, CommandPermissionTest) {
     checkNoSuchAsset();
   }
 }
+
+INSTANTIATE_TEST_SUITE_P(Common,
+                         CreateAssetPermissionTest,
+                         command_permission_test::getParams(boost::none,
+                                                            boost::none,
+                                                            Domain::kCreateAsset,
+                                                            boost::none),
+                         command_permission_test::paramToString);
 
