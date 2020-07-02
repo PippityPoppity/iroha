@@ -1,6 +1,4 @@
-
 #include "integration/executor/executor_fixture.hpp"
-
 #include <gtest/gtest.h>
 #include "common/result.hpp"
 #include "framework/common_constants.hpp"
@@ -14,7 +12,6 @@ using namespace common_constants;
 using namespace executor_testing;
 using namespace framework::expected;
 using namespace shared_model::interface::types;
-
 using shared_model::interface::permissions::Grantable;
 using shared_model::interface::permissions::Role;
 
@@ -30,19 +27,19 @@ class CreateAssetTest : public ExecutorTestBase {
  public:
 
 void checkAsset(
-      const boost::optional<AssetIdType> &asset_id = boost::none,
-      PrecisionType precision = kAssetPrecision) {
+    const boost::optional<AssetIdType> &asset_id = boost::none,
+    PrecisionType precision = kAssetPrecision) {
     auto asset_id_val = asset_id.value_or(getNewId());
-    ASSERT_NO_FATAL_FAILURE(checkSignatories(asset_id_val, {precision}););
+    ASSERT_NO_FATAL_FAILURE(checkAssetExistance(asset_id_val, {precision}););
   }
 
-  void checkNoSuchAsset(
-      const boost::optional<AssetIdType> &kAsset_id = boost::none) {
+void checkNoSuchAsset(
+    const boost::optional<AssetIdType> &asset_id = boost::none) {
     auto asset_id_val = asset_id.value_or(getNewId());
     checkQueryError<shared_model::interface::NoAssetErrorResponse>(
         getItf().executeQuery(
             *getItf().getMockQueryFactory()->constructCreateAsset(
-                asset.val)),
+                asset_id_val)),
         0);
   }
 
@@ -52,16 +49,16 @@ void checkAsset(
       const DomainIdType &target_domain = kDomain,
       constexpr PrecisionType  &precision = kAssetPrecision,
       bool validation_enabled = true) {
-    return getItf().executeCommandAsAccount(
+      return getItf().executeCommandAsAccount(
         *getItf().getMockCommandFactory()->constructCreateAsset(
             target_name, target_domain, precision),
         issuer,
-        validation_enabled);
+        validation_enabled);	
   }
-//
+
   iroha::ametsuchi::CommandResult createDefaultAsset(
       const AccountIdType &issuer, bool validation_enabled = true) {
-    return createAsset(
+      return createAsset(
         issuer, kAssetName, kDomain, kAssetPrecision, validation_enabled);
   }
 };
