@@ -29,20 +29,13 @@ const AssetIdType &getNewId() {
 class CreateAssetTest : public ExecutorTestBase {
  public:
 
-void checkAsset(
-      const boost::optional<AssetIdType> &asset_id = boost::none,
-      PrecisionType precision = kAssetPrecision) {
-    auto asset_id_val = asset_id.value_or(getNewId());
-    ASSERT_NO_FATAL_FAILURE(checkSignatories(asset_id_val, {precision}););
-  }
-
   void checkNoSuchAsset(
-      const boost::optional<AssetIdType> &kAsset_id = boost::none) {
-    auto asset_id_val = asset_id.value_or(getNewId());
+      const boost::optional<AssetIdType> asset_id = boost::none) {
+    auto asset_val = asset_id.value_or(getNewId());
     checkQueryError<shared_model::interface::NoAssetErrorResponse>(
         getItf().executeQuery(
             *getItf().getMockQueryFactory()->constructCreateAsset(
-                asset.val)),
+                asset_val)),
         0);
   }
 
@@ -74,7 +67,7 @@ using CreateAssetBasicTest = BasicExecutorTest<CreateAssetTest>;
  *  then the command does not succeed and the asset is not added
  */
 TEST_P(CreateAssetBasicTest, NoDomain) {
-  checkCommandError(createAsset(kAdminId, kAssetName, "no_such_domain"), 3);
+  checkCommandError(checkNoSuchAsset(kAdminId, kAssetName, "no_such_domain"), 3);
   checkNoSuchAsset(kAssetName + "@no_such_domain");
 }
 
@@ -86,10 +79,12 @@ TEST_P(CreateAssetBasicTest, NoDomain) {
 TEST_P(CreateAssetBasicTest, NameExists) {
   ASSERT_NO_FATAL_FAILURE(
       getItf().createAssetWithPerms(kAssetName, kDomain, kAssetPrecision, {}));
-  ASSERT_NO_FATAL_FAILURE(checkAsset());
+  ASSERT_NO_FATAL_FAILURE(checkVerifiedProposal( 
+  			[](auto &vproposal) {
+            ASSERT_EQ(vproposal->transactions().size(), 0););
 
   checkCommandError(createDefaultAsset(kAdminId), 4);
-  checkAsset();
+  checkNoSuchAsset();
 }
 
 
@@ -105,8 +100,6 @@ TEST_P(CreateAssetPermissionTest, CommandPermissionTest) {
   ASSERT_NO_FATAL_FAILURE(getItf().createDomain(kDomain));
 
   if (checkResponse(createDefaultAsset(getActor(), getValidationEnabled()))) {
-    checkAsset();
-  } else {
     checkNoSuchAsset();
   }
 }
