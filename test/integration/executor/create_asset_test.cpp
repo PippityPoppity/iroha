@@ -1,4 +1,7 @@
-
+/**
+ * Copyright Soramitsu Co., Ltd. All Rights Reserved.
+ * SPDX-License-Identifier: Apache-2.0
+ */
 #include "integration/executor/executor_fixture.hpp"
 
 #include <gtest/gtest.h>
@@ -28,14 +31,20 @@ const AssetIdType &getNewId() {
 
 class CreateAssetTest : public ExecutorTestBase {
  public:
+ 	void checkAsset(
+      AssetIdType const &asset_id = kAssetId, 
+	  PrecisionType precision= kAssetPrecision) {
+    auto account_id_val = account_id.value_or(getNewId());
+    ASSERT_NO_FATAL_FAILURE(GetAssetInfo(account_id_val, {precision}););
+  }
 
   void checkNoSuchAsset(
-      const boost::optional<AssetIdType> asset_id = boost::none) {
+      		AssetIdType const &asset_id = kAssetId)) {
     auto asset_val = asset_id.value_or(getNewId());
     checkQueryError<shared_model::interface::NoAssetErrorResponse>(
         getItf().executeQuery(
             *getItf().getMockQueryFactory()->constructCreateAsset(
-                asset_val)),
+                asset_id)),
         0);
   }
 
@@ -62,9 +71,9 @@ class CreateAssetTest : public ExecutorTestBase {
 using CreateAssetBasicTest = BasicExecutorTest<CreateAssetTest>;
 
 /**
- *  given a user with all related permissions
- *  when executes CreateAsset command with nonexistent domain
- *  then the command does not succeed and the asset is not added
+ * @given a user with all related permissions
+ * @when executes CreateAsset command with nonexistent domain
+ * @then the command does not succeed and the asset is not added
  */
 TEST_P(CreateAssetBasicTest, NoDomain) {
   checkCommandError(checkNoSuchAsset(kAdminId, kAssetName, "no_such_domain"), 3);
@@ -72,9 +81,9 @@ TEST_P(CreateAssetBasicTest, NoDomain) {
 }
 
 /**
- * given a user with all related permissions
- * when executes CreateAsset command with already taken name
- * then the command does not succeed and the original asset is not changed
+ * @given a user with all related permissions
+ * @when executes CreateAsset command with already taken name
+ * @then the command does not succeed and the original asset is not changed
  */
 TEST_P(CreateAssetBasicTest, NameExists) {
   ASSERT_NO_FATAL_FAILURE(
@@ -100,6 +109,8 @@ TEST_P(CreateAssetPermissionTest, CommandPermissionTest) {
   ASSERT_NO_FATAL_FAILURE(getItf().createDomain(kDomain));
 
   if (checkResponse(createDefaultAsset(getActor(), getValidationEnabled()))) {
+	checkAsset();
+  } else {
     checkNoSuchAsset();
   }
 }
